@@ -285,9 +285,9 @@ def parse_grid(path):
 	squares = infer_grid(cropped)
 	
 	
-		
+	print("Get digit")	
 	digits = get_digits(cropped, squares, 28)
-
+	print("Get Final img")	
 	final_image = show_digits(digits)
 	return final_image
 
