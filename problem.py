@@ -13,9 +13,10 @@ def remove_grid_from_sudoku(image):
     """
     # Chuyển ảnh sang xám (grayscale)
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    
+    #  Cân bằng sáng (histogram equalization)
+    equalized_image = cv2.equalizeHist(gray_image)
     # Áp dụng threshold để chuyển ảnh thành nhị phân (để dễ nhận diện các đường kẻ)
-    _, binary_image = cv2.threshold(gray_image, 150, 255, cv2.THRESH_BINARY_INV, )
+    _, binary_image = cv2.threshold(equalized_image, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
     
     # Tạo kernel cho phép toán hình thái học
     kernel = np.ones((3, 3), np.uint8)
@@ -322,7 +323,7 @@ def save_image(image, image_name, output_folder='processed_images'):
     cv2.imwrite(file_path, image)
 
 def main(file):
-    extract_sudoku(file)
+    img1=extract_sudoku(file)
     img=remove_grid_from_sudoku(cv2.imread('cropped_image.jpg'))
     divide(img, 'output_cells')
     # Thêm số dự đoán vào danh sách
@@ -344,4 +345,4 @@ def main(file):
 
 
 if __name__ == "__main__":
-    main("6.jpg")
+    main("4.jpg")
