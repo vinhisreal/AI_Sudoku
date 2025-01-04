@@ -342,4 +342,4 @@ def main(file):
 
 
 if __name__ == "__main__":
-    main("1.jpg")
+    main("2.jpg")
