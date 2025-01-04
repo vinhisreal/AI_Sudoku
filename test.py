@@ -61,7 +61,7 @@ def caculate_predictions(digits, model=model):
         backup = cv2.resize(img.copy(), (50, 50))  # Resize backup image to 50x50
         
         # Tạo viền đen xung quanh ảnh (padding)
-        padding = 5  # Số pixel viền đen muốn thêm vào
+        padding = 8  # Số pixel viền đen muốn thêm vào
         img_padded = cv2.copyMakeBorder(img, padding, padding, padding, padding, cv2.BORDER_CONSTANT, value=0)  # Thêm viền đen
         
         # Resize ảnh sau khi đã thêm viền để có kích thước đúng (28x28)
