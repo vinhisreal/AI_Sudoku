@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import os
-from test import extract_sudoku
+from preprocess import extract_sudoku
 
 model = tf.keras.models.load_model('se_cnn_mnist_28x28.h5')
 
@@ -109,7 +109,7 @@ def remove_border_and_center_number(image, border_width=5, min_dimension_percent
 
     return result
 
-def divide(img, save_path=None):
+def divide_cell(img, save_path=None):
     """
     
     Chia ảnh thành 81 ô và áp dụng threshold trên mỗi ô.
@@ -320,7 +320,7 @@ def save_image(image, image_name, output_folder='processed_images'):
     cv2.imwrite(file_path, image)
 
 def main(file):
-    img, predicted_digits=extract_sudoku(file)
+    img=extract_sudoku(file)
     # Tạo ma trận Sudoku từ kết quả dự đoán
     sudoku_matrix = create_sudoku_matrix_from_predictions(predicted_digits)
     print("Initial Sudoku matrix:")
