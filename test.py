@@ -58,18 +58,20 @@ def distinguish_5_and_6(image):
 def caculate_predictions(digits, model=model):
     predictions = []
     for img in digits:
-        backup = cv2.resize(img.copy(),(50,50))
-        img = cv2.resize(img, (28, 28))  # Resize to fit model input
+        backup = cv2.resize(img.copy(), (50, 50))  # Resize backup image to 50x50
+        img = cv2.resize(img, (28, 28))  # Resize image to fit model input (28x28)
         img = img.astype('float32') / 255.0  # Normalize image
-        img = img.reshape(1, 28, 28, 1)  # Reshape for the model input
+        img = img.reshape(1, 28, 28, 1)  # Reshape image for the model input (batch size 1)
 
-        # Predict the digit
-        prediction = model.predict(img)
-        predicted_digit = np.argmax(prediction, axis=1)[0]
-
+        if np.sum(img) > 0:  # Only predict if the image has non-zero pixels
+            prediction = model.predict(img)
+            predicted_digit = np.argmax(prediction, axis=1)[0]  # Get the predicted digit
+        else:
+            predicted_digit = 0  # If image is all zeros, assume the digit is 0
+        
         if predicted_digit == 5 or predicted_digit == 6:
             predicted_digit = distinguish_5_and_6(backup)  # Special handling for 5 and 6
-
+        
         predictions.append(predicted_digit)
 
     return predictions  # Return predictions to be used later
