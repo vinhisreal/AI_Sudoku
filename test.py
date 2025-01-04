@@ -59,6 +59,7 @@ def caculate_predictions(digits, model=model):
     predictions = []
     for img in digits:
         backup = cv2.resize(img.copy(), (50, 50))  # Resize backup image to 50x50
+        img = cv2.GaussianBlur(img, (5, 5), 0)  # Apply Gaussian blur    
         img = cv2.resize(img, (28, 28))  # Resize image to fit model input (28x28)
         img = img.astype('float32') / 255.0  # Normalize image
         img = img.reshape(1, 28, 28, 1)  # Reshape image for the model input (batch size 1)
