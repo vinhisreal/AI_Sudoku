@@ -37,43 +37,6 @@ def convert_when_colour(colour, img):
 			img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
 	return img
 
-
-# def display_points(in_img, points, radius=5, colour=(0, 0, 255)):
-# 	"""Draws circular points on an image."""
-# 	img = in_img.copy()
-
-# 	# Dynamically change to a colour image if necessary
-# 	if len(colour) == 3:
-# 		if len(img.shape) == 2:
-# 			img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-# 		elif img.shape[2] == 1:
-# 			img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-
-# 	for point in points:
-# 		img = cv2.circle(img, tuple(int(x) for x in point), radius, colour, -1)
-# 	print("display point")
-# 	show_image(img)
-# 	return img
-
-
-# def display_rects(in_img, rects, colour=(0, 0, 255)):
-# 	"""Displays rectangles on the image."""
-# 	img = convert_when_colour(colour, in_img.copy())
-# 	for rect in rects:
-# 		img = cv2.rectangle(img, tuple(int(x) for x in rect[0]), tuple(int(x) for x in rect[1]), colour)
-# 	print("display_rects")
-# 	show_image(img)
-# 	return img
-
-
-def display_contours(in_img, contours, colour=(0, 0, 255), thickness=2):
-	"""Displays contours on the image."""
-	img = convert_when_colour(colour, in_img.copy())
-	img = cv2.drawContours(img, contours, -1, colour, thickness)
-	print("display_contours")
-	show_image(img)
-
-
 def pre_process_image(img, skip_dilate=False):
 	"""Uses a blurring function, adaptive thresholding and dilation to expose the main features of an image."""
 
