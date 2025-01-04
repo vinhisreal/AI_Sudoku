@@ -22,11 +22,12 @@ def show_image(img):
 
 
 def show_digits(digits, model=model, colour=255):
-    """Hiển thị danh sách 81 chữ số được trích xuất trong định dạng lưới và dự đoán."""
     rows = []
-    predictions = []  # Lưu kết quả dự đoán
+    predictions = [] 
 
-    # Thêm viền cho từng ảnh chữ số
+    for img in digits:  
+        show_image(img) 
+
     with_border = [
         cv2.copyMakeBorder(img.copy(), 1, 1, 1, 1, cv2.BORDER_CONSTANT, None, colour) for img in digits
     ]
@@ -48,25 +49,8 @@ def show_digits(digits, model=model, colour=255):
 
     # Hiển thị ảnh
     img = show_image(np.concatenate(rows))
-    draw_sudoku(predictions)
-    return img, predictions
-def create_sudoku_matrix(predicted_digits):
-    """Chuyển danh sách số thành ma trận 9x9."""
-    return np.array(predicted_digits).reshape(9, 9)
 
-def draw_sudoku(board):
-    """Hiển thị ma trận Sudoku dưới dạng bàn cờ."""
-    for i in range(9):
-        if i % 3 == 0 and i != 0:
-            print("-" * 21)  # Đường kẻ ngang giữa các khối 3x3
-        
-        for j in range(9):
-            if j % 3 == 0 and j != 0:
-                print("|", end=" ")  # Đường kẻ dọc giữa các khối 3x3
-            
-            # In ra số trong ô, thay thế 0 bằng dấu "."
-            print(board[i][j] if board[i][j] != 0 else ".", end=" ")
-        print()  # Xuống dòng sau mỗi hàng
+    return img, predictions
 
 def convert_when_colour(colour, img):
 	"""Dynamically converts an image to colour if the input colour is a tuple and the image is grayscale."""
