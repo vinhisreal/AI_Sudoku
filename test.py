@@ -58,7 +58,7 @@ def distinguish_5_and_6(image):
 def caculate_predictions(digits, model=model):
     predictions = []
     for img in digits:
-        backup = img.copy()
+        backup = cv2.resize(img.copy(),(50,50))
         img = cv2.resize(img, (28, 28))  # Resize to fit model input
         img = img.astype('float32') / 255.0  # Normalize image
         img = img.reshape(1, 28, 28, 1)  # Reshape for the model input
