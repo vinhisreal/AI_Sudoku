@@ -280,7 +280,8 @@ def parse_grid(path):
 	corners = find_corners_of_largest_polygon(processed)
 	cropped = crop_and_warp(original, corners)
 	
-	cropped_img = cv2.resize(cropped, (600, 600))              # Resize image
+	cropped_img = cv2.resize(cropped, (600, 600))
+	# img_eq = cv2.equalizeHist(cropped_img)
 	cv2.imwrite('cropped_image.jpg', cropped_img)
 
 	squares = infer_grid(cropped)
