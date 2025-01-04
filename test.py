@@ -5,6 +5,11 @@ import numpy as np
 from matplotlib import pyplot as plt
 from readmodel import extract_number
 import sys
+import tensorflow as tf
+import os
+from test import extract_sudoku
+
+model = tf.keras.models.load_model('se_cnn_mnist_28x28.h5')
 
 def show_image(img):
     """Shows an image until any key is pressed"""
@@ -17,15 +22,37 @@ def show_image(img):
     return img
 
 
-def show_digits(digits, colour=255):
-    """Shows list of 81 extracted digits in a grid format"""
+def show_digits(digits, model, colour=255):
+    """Hiển thị danh sách 81 chữ số được trích xuất trong định dạng lưới và dự đoán."""
     rows = []
-    with_border = [cv2.copyMakeBorder(img.copy(), 1, 1, 1, 1, cv2.BORDER_CONSTANT, None, colour) for img in digits]
+    predictions = []  # Lưu kết quả dự đoán
+
+    # Thêm viền cho từng ảnh chữ số
+    with_border = [
+        cv2.copyMakeBorder(img.copy(), 1, 1, 1, 1, cv2.BORDER_CONSTANT, None, colour) for img in digits
+    ]
+
     for i in range(9):
         row = np.concatenate(with_border[i * 9:((i + 1) * 9)], axis=1)
         rows.append(row)
+
+        # Dự đoán các chữ số trong hàng hiện tại
+        for digit in digits[i * 9:((i + 1) * 9)]:
+            # Chuẩn hóa đầu vào trước khi đưa vào mô hình (nếu cần)
+            if digit is not None:
+                digit = digit / 255.0  # Normalize pixel values to [0, 1]
+                digit = digit.reshape(1, 28, 28, 1)  # Đảm bảo đầu vào phù hợp với mô hình
+                pred = model.predict(digit)  # Dự đoán chữ số
+                predictions.append(np.argmax(pred))  # Lưu kết quả dự đoán (chỉ số của giá trị cao nhất)
+            else:
+                predictions.append(0)  # Nếu không có chữ số, mặc định là 0
+
+    # Hiển thị ảnh
     img = show_image(np.concatenate(rows))
-    return img
+    print("Predictions:", predictions)  # In kết quả dự đoán
+
+    return img, predictions
+
  
 
 def convert_when_colour(colour, img):
@@ -288,7 +315,9 @@ def parse_grid(path):
 	print("Get digit")	
 	digits = get_digits(cropped, squares, 28)
 	print("Get Final img")	
-	final_image = show_digits(digits)
+	final_image, predicts = show_digits(digits)
+	print("Predicts")
+	print(predicts)
 	return final_image
 
 def output(a):
@@ -296,5 +325,5 @@ def output(a):
 
 
 def extract_sudoku(image_path):
-    final_image = parse_grid(image_path)
+    final_image, predicts = parse_grid(image_path)
     return final_image
