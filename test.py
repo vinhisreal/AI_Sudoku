@@ -21,36 +21,67 @@ def show_image(img):
     return img
 
 
-def show_digits(digits, model=model, colour=255):
+def distinguish_5_and_6(image):
+    """
+    Phân biệt giữa số 5 và số 6 dựa trên đặc trưng hình dạng mà không dùng tỷ lệ chiều rộng/chiều cao.
+    
+    Args:
+        image: Ảnh chứa một ô chữ số (28x28).
+    
+    Returns:
+        "5" hoặc "6" dựa trên phân tích hình dạng.
+    """
+    # Chuyển ảnh sang nhị phân
+    _, binary = cv2.threshold(image, 150, 255, cv2.THRESH_BINARY)
+    
+    # Tìm contours
+    contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    if not contours:
+        return None  # Không có gì để kiểm tra
+
+    # Chọn contour lớn nhất
+    largest_contour = max(contours, key=cv2.contourArea)
+    
+    # Tính thuộc tính hình dạng
+    area = cv2.contourArea(largest_contour)        # Diện tích vùng khép kín
+    hull_area = cv2.contourArea(cv2.convexHull(largest_contour))  # Diện tích vỏ lồi
+    solidity = area / hull_area if hull_area > 0 else 0  # Độ đặc của vùng
+
+    # Quy tắc phân biệt cải thiện:
+    if solidity > 0.70:  # Số 6 thường có độ đặc cao hơn, do vùng khép kín nhiều
+        return 6
+
+    return 5
+
+
+def caculate_predictions(digits, model=model):
+	predictions = []
+	for img in digits:
+		backup = img.copy()
+		img = cv2.resize(img, (28, 28))
+		# Chuẩn bị dữ liệu cho CNN
+		img = img.astype('float32') / 255.0  # Chuẩn hóa
+		img = img.reshape(1, 28, 28, 1)  # Thêm batch dimension
+		
+		# Dự đoán
+		prediction = model.predict(img)
+		predicted_digit = np.argmax(prediction, axis=1)[0]
+		# Thêm số dự đoán vào danh sách
+		
+		if(predicted_digit ==5 or predicted_digit==6):
+			predicted_digit= distinguish_5_and_6(backup)
+		predictions.append(predicted_digit)
+
+def show_digits(digits, colour=255):
+    """Shows list of 81 extracted digits in a grid format"""
     rows = []
-    predictions = [] 
-
-    for img in digits:  
-        show_image(img) 
-
-    with_border = [
-        cv2.copyMakeBorder(img.copy(), 1, 1, 1, 1, cv2.BORDER_CONSTANT, None, colour) for img in digits
-    ]
-
+    with_border = [cv2.copyMakeBorder(img.copy(), 1, 1, 1, 1, cv2.BORDER_CONSTANT, None, colour) for img in digits]
     for i in range(9):
         row = np.concatenate(with_border[i * 9:((i + 1) * 9)], axis=1)
         rows.append(row)
-
-        # Dự đoán các chữ số trong hàng hiện tại
-        for digit in digits[i * 9:((i + 1) * 9)]:
-            # Chuẩn hóa đầu vào trước khi đưa vào mô hình (nếu cần)
-            if digit is not None:
-                digit = digit / 255.0  # Normalize pixel values to [0, 1]
-                digit = digit.reshape(1, 28, 28, 1)  # Đảm bảo đầu vào phù hợp với mô hình
-                pred = model.predict(digit)  # Dự đoán chữ số
-                predictions.append(np.argmax(pred))  # Lưu kết quả dự đoán (chỉ số của giá trị cao nhất)
-            else:
-                predictions.append(0)  # Nếu không có chữ số, mặc định là 0
-
-    # Hiển thị ảnh
     img = show_image(np.concatenate(rows))
-
-    return img, predictions
+    return img
 
 def convert_when_colour(colour, img):
 	"""Dynamically converts an image to colour if the input colour is a tuple and the image is grayscale."""
@@ -302,25 +333,21 @@ def parse_grid(path):
 	corners = find_corners_of_largest_polygon(processed)
 	cropped = crop_and_warp(original, corners)
 	
-	cv2.namedWindow('cropped',cv2.WINDOW_AUTOSIZE)
 	cropped_img = cv2.resize(cropped, (600, 600))              # Resize image
 	cv2.imwrite('cropped_image.jpg', cropped_img)
 
 	squares = infer_grid(cropped)
 	
 	
-	print("Get digit")	
 	digits = get_digits(cropped, squares, 28)
-	print("Get Final img")	
-	final_image, predicts = show_digits(digits)
-	print("Predicts")
-	print(predicts)
-	return final_image
+	predictions = caculate_predictions(digits)
+	final_image = show_digits(digits)
+	return final_image, predictions
 
 def output(a):
     sys.stdout.write(str(a))
 
 
 def extract_sudoku(image_path):
-    final_image = parse_grid(image_path)
-    return final_image
+    final_image, predictions = parse_grid(image_path)
+    return final_image, predictions
