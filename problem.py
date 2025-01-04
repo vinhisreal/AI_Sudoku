@@ -15,7 +15,7 @@ def remove_grid_from_sudoku(image):
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     
     # Áp dụng threshold để chuyển ảnh thành nhị phân (để dễ nhận diện các đường kẻ)
-    _, binary_image = cv2.threshold(gray_image, 150, 255, cv2.THRESH_BINARY_INV)
+    _, binary_image = cv2.threshold(gray_image, 150, 255, cv2.THRESH_BINARY_INV, )
     
     # Tạo kernel cho phép toán hình thái học
     kernel = np.ones((3, 3), np.uint8)
@@ -111,7 +111,7 @@ def remove_border_and_center_number(image, border_width=5, min_dimension_percent
 
     return result
 
-def divide_and_threshold(img, save_path=None):
+def divide(img, save_path=None):
     """
     
     Chia ảnh thành 81 ô và áp dụng threshold trên mỗi ô.
@@ -324,7 +324,7 @@ def save_image(image, image_name, output_folder='processed_images'):
 def main(file):
     extract_sudoku(file)
     img=remove_grid_from_sudoku(cv2.imread('cropped_image.jpg'))
-    divide_and_threshold(img, 'output_cells')
+    divide(img, 'output_cells')
     # Thêm số dự đoán vào danh sách
 # Dự đoán số từ các ảnh trong thư mục
     model = tf.keras.models.load_model('se_cnn_mnist_28x28.h5')  # Tải model CNN
