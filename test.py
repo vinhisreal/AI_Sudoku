@@ -59,13 +59,20 @@ def caculate_predictions(digits, model=model):
     predictions = []
     for img in digits:
         backup = cv2.resize(img.copy(), (50, 50))  # Resize backup image to 50x50
-        img = cv2.GaussianBlur(img, (5, 5), 0)  # Apply Gaussian blur    
-        img = cv2.resize(img, (28, 28))  # Resize image to fit model input (28x28)
-        img = img.astype('float32') / 255.0  # Normalize image
-        img = img.reshape(1, 28, 28, 1)  # Reshape image for the model input (batch size 1)
+        
+        # Tạo viền đen xung quanh ảnh (padding)
+        padding = 5  # Số pixel viền đen muốn thêm vào
+        img_padded = cv2.copyMakeBorder(img, padding, padding, padding, padding, cv2.BORDER_CONSTANT, value=0)  # Thêm viền đen
+        
+        # Resize ảnh sau khi đã thêm viền để có kích thước đúng (28x28)
+        img_resized = cv2.resize(img_padded, (28, 28))  # Resize image to fit model input (28x28)
+        
+        # Tiền xử lý ảnh (normalize và reshape)
+        img_resized = img_resized.astype('float32') / 255.0  # Normalize image
+        img_resized = img_resized.reshape(1, 28, 28, 1)  # Reshape image for the model input (batch size 1)
 
-        if np.sum(img) > 0:  # Only predict if the image has non-zero pixels
-            prediction = model.predict(img)
+        if np.sum(img_resized) > 0:  # Only predict if the image has non-zero pixels
+            prediction = model.predict(img_resized)
             predicted_digit = np.argmax(prediction, axis=1)[0]  # Get the predicted digit
         else:
             predicted_digit = 0  # If image is all zeros, assume the digit is 0
