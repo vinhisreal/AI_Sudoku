@@ -320,14 +320,7 @@ def save_image(image, image_name, output_folder='processed_images'):
     cv2.imwrite(file_path, image)
 
 def main(file):
-    img1=extract_sudoku(file)
-    img=remove_grid_from_sudoku(cv2.imread('cropped_image.jpg'))
-    divide(img, 'output_cells')
-    # Thêm số dự đoán vào danh sách
-# Dự đoán số từ các ảnh trong thư mục
-    model = tf.keras.models.load_model('se_cnn_mnist_28x28.h5')  # Tải model CNN
-    predicted_digits = predict_digits_from_folder('output_cells', model)
-    
+    img, predicted_digits=extract_sudoku(file)
     # Tạo ma trận Sudoku từ kết quả dự đoán
     sudoku_matrix = create_sudoku_matrix_from_predictions(predicted_digits)
     print("Initial Sudoku matrix:")
