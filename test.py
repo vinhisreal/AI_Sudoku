@@ -56,22 +56,23 @@ def distinguish_5_and_6(image):
 
 
 def caculate_predictions(digits, model=model):
-	predictions = []
-	for img in digits:
-		backup = img.copy()
-		img = cv2.resize(img, (28, 28))
-		# Chuẩn bị dữ liệu cho CNN
-		img = img.astype('float32') / 255.0  # Chuẩn hóa
-		img = img.reshape(1, 28, 28, 1)  # Thêm batch dimension
-		
-		# Dự đoán
-		prediction = model.predict(img)
-		predicted_digit = np.argmax(prediction, axis=1)[0]
-		# Thêm số dự đoán vào danh sách
-		
-		if(predicted_digit ==5 or predicted_digit==6):
-			predicted_digit= distinguish_5_and_6(backup)
-		predictions.append(predicted_digit)
+    predictions = []
+    for img in digits:
+        backup = img.copy()
+        img = cv2.resize(img, (28, 28))  # Resize to fit model input
+        img = img.astype('float32') / 255.0  # Normalize image
+        img = img.reshape(1, 28, 28, 1)  # Reshape for the model input
+
+        # Predict the digit
+        prediction = model.predict(img)
+        predicted_digit = np.argmax(prediction, axis=1)[0]
+
+        if predicted_digit == 5 or predicted_digit == 6:
+            predicted_digit = distinguish_5_and_6(backup)  # Special handling for 5 and 6
+
+        predictions.append(predicted_digit)
+
+    return predictions  # Return predictions to be used later
 
 def show_digits(digits, colour=255):
     """Shows list of 81 extracted digits in a grid format"""
