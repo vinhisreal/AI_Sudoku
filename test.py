@@ -24,7 +24,6 @@ def show_digits(digits, colour=255):
     for i in range(9):
         row = np.concatenate(with_border[i * 9:((i + 1) * 9)], axis=1)
         rows.append(row)
-    print("Digits")
     img = show_image(np.concatenate(rows))
     return img
  
