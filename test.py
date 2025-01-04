@@ -48,10 +48,34 @@ def show_digits(digits, model=model, colour=255):
 
     # Hiển thị ảnh
     img = show_image(np.concatenate(rows))
-    print("Predictions:", predictions)  # In kết quả dự đoán
-
+    show_sudoku_board(predictions)
     return img, predictions
 
+def show_sudoku_board(predicts):
+    """
+    Hiển thị bàn Sudoku từ danh sách các dự đoán.
+    :param predicts: Danh sách 81 số dự đoán (list hoặc numpy array).
+    """
+    if len(predicts) != 81:
+        raise ValueError("Số lượng số trong predicts phải đúng 81.")
+    
+    # Chuyển đổi danh sách thành ma trận 9x9
+    sudoku_board = np.array(predicts).reshape(9, 9)
+    
+    # In bảng Sudoku
+    print("Bàn Sudoku:")
+    print("-" * 25)  # Dòng phân cách ngang
+    for i, row in enumerate(sudoku_board):
+        row_str = ""
+        for j, num in enumerate(row):
+            # Hiển thị số và thêm khoảng cách giữa các cột
+            row_str += f" {num} " if num != 0 else " . "  # Dùng '.' cho ô trống
+            if (j + 1) % 3 == 0 and j < 8:  # Phân cách giữa các khối 3x3
+                row_str += "|"
+        print(row_str)
+        if (i + 1) % 3 == 0 and i < 8:  # Dòng phân cách giữa các khối 3x3
+            print("-" * 25)
+    print("-" * 25)
  
 
 def convert_when_colour(colour, img):
