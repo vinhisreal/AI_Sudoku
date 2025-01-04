@@ -7,7 +7,6 @@ from readmodel import extract_number
 import sys
 import tensorflow as tf
 import os
-from test import extract_sudoku
 
 model = tf.keras.models.load_model('se_cnn_mnist_28x28.h5')
 
@@ -22,7 +21,7 @@ def show_image(img):
     return img
 
 
-def show_digits(digits, model, colour=255):
+def show_digits(digits, model=model, colour=255):
     """Hiển thị danh sách 81 chữ số được trích xuất trong định dạng lưới và dự đoán."""
     rows = []
     predictions = []  # Lưu kết quả dự đoán
@@ -325,5 +324,5 @@ def output(a):
 
 
 def extract_sudoku(image_path):
-    final_image, predicts = parse_grid(image_path)
+    final_image = parse_grid(image_path)
     return final_image
