@@ -339,7 +339,5 @@ def main(file):
     else:
         print("No solution exists for the given Sudoku.")
 
-
-
 if __name__ == "__main__":
     main("1.jpg")
