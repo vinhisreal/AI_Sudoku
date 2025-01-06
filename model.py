@@ -2,82 +2,104 @@ import tensorflow as tf
 from tensorflow.keras.datasets import mnist
 from tensorflow.keras.utils import to_categorical
 import numpy as np
-import cv2
-import tensorflow as tf
-from tensorflow.keras import layers
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-import pandas as pd
-import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
-import matplotlib.image as img
-# Xây dựng mô hình CNN để phân loại từ 1 đến 9
-def get_cnn_model():
-    #CNN Architecture is In -> [[Conv2D->relu]*2 -> MaxPool2D -> Dropout]*2 -> 
-                           #Flatten -> Dense -> Dropout -> Out
-    model = tf.keras.Sequential()
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dropout, Dense, Flatten, Input, GlobalAveragePooling2D, Multiply
+from tensorflow.keras.models import Model
 
-    model.add(layers.Conv2D(filters=32, kernel_size=(5,5), padding='Same', 
-                        activation=tf.nn.relu, input_shape = (28,28,1)))
-    model.add(layers.Conv2D(filters=32, kernel_size=(5,5), padding='Same', 
-                        activation=tf.nn.relu))
-    model.add(layers.MaxPool2D(pool_size=(2,2)))
-    model.add(layers.Dropout(0.25))
+# Squeeze-and-Excitation Block
+def se_block(input_tensor, reduction=16):
+    """
+    Squeeze-and-Excitation Block.
+    Args:
+        input_tensor: Tensor from the previous layer.
+        reduction: Reduction ratio for bottleneck.
+    Returns:
+        Tensor after applying SE block.
+    """
+    filters = input_tensor.shape[-1]
+    se = GlobalAveragePooling2D()(input_tensor)
+    se = Dense(filters // reduction, activation='relu')(se)
+    se = Dense(filters, activation='sigmoid')(se)
+    return Multiply()([input_tensor, se])
 
+def get_se_cnn_model():
+    """
+    Returns a CNN model enhanced with Squeeze-and-Excitation blocks.
+    """
+    inputs = Input(shape=(28, 28, 1))
+    x = Conv2D(32, (3, 3), activation='relu', padding='same')(inputs)
+    x = se_block(x)
+    x = Conv2D(32, (3, 3), activation='relu', padding='same')(x)
+    x = MaxPooling2D(pool_size=(2, 2))(x)
+    x = Dropout(0.25)(x)
 
-    model.add(layers.Conv2D(filters=64, kernel_size=(3,3), padding='Same', 
-                        activation=tf.nn.relu, input_shape = (28,28,1)))
-    model.add(layers.Conv2D(filters=64, kernel_size=(3,3), padding='Same', 
-                        activation=tf.nn.relu))
-    model.add(layers.MaxPool2D(pool_size=(2,2),strides=(2,2)))
-    model.add(layers.Dropout(0.25))
-    model.add(layers.Flatten())
-    model.add(layers.Dense(256,activation=tf.nn.relu))
-    model.add(layers.Dropout(0.25))
-    model.add(layers.Dense(10,activation=tf.nn.softmax))
+    x = Conv2D(64, (3, 3), activation='relu', padding='same')(x)
+    x = se_block(x)
+    x = Conv2D(64, (3, 3), activation='relu', padding='same')(x)
+    x = MaxPooling2D(pool_size=(2, 2))(x)
+    x = Dropout(0.25)(x)
 
-# Huấn luyện và lưu mô hình CNN
+    x = Flatten()(x)
+    x = Dense(256, activation='relu')(x)
+    x = Dropout(0.5)(x)
+    outputs = Dense(10, activation='softmax')(x)
+
+    model = Model(inputs, outputs)
+    return model
+
+# Huấn luyện và lưu mô hình
 def train_and_save_cnn_model():
-    # Tải bộ dữ liệu MNIST
+    """
+    Trains and saves the CNN model for digit classification (0-9).
+    """
+    # Load MNIST dataset
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-    # Lọc dữ liệu để chỉ giữ lại các chữ số từ 1 đến 9
-    x_train = x_train[y_train != 0]
-    y_train = y_train[y_train != 0]
-    x_test = x_test[y_test != 0]
-    y_test = y_test[y_test != 0]
-
-    # Tiền xử lý dữ liệu
+    # Normalize pixel values to [0, 1]
     x_train = x_train / 255.0
     x_test = x_test / 255.0
-    
-    # Chuyển đổi kích thước ảnh và chuẩn hóa ảnh (32x32)
-    x_train_resized = [cv2.resize(img, (32, 32)) for img in x_train]
-    x_test_resized = [cv2.resize(img, (32, 32)) for img in x_test]
 
-    # Chuyển đổi thành mảng numpy
-    x_train_resized = np.array(x_train_resized)
-    x_test_resized = np.array(x_test_resized)
+    # Add channel dimension
+    x_train = x_train.reshape(-1, 28, 28, 1)
+    x_test = x_test.reshape(-1, 28, 28, 1)
 
-    # Chuyển ảnh thành dạng (batch_size, height, width, channels)
-    x_train_resized = x_train_resized.reshape(-1, 32, 32, 1)
-    x_test_resized = x_test_resized.reshape(-1, 32, 32, 1)
+    # Convert labels to one-hot encoding
+    y_train = to_categorical(y_train, 10)
+    y_test = to_categorical(y_test, 10)
 
-    # Chuyển nhãn thành one-hot encoding (9 lớp cho 1-9)
-    y_train = to_categorical(y_train - 1, 9)  # Đảm bảo nhãn bắt đầu từ 0 (do MNIST có nhãn từ 1 đến 9)
-    y_test = to_categorical(y_test - 1, 9)
+    # Create and compile the model
+    model = get_se_cnn_model()
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
-    # Tạo mô hình CNN
-    model = get_cnn_model()
+    # Train the model
+    history = model.fit(
+        x_train, y_train,
+        epochs=20,
+        validation_data=(x_test, y_test),
+        batch_size=64,
+        verbose=2
+    )
 
-    # Huấn luyện mô hình
-    model.fit(x_train_resized, y_train, epochs=10, validation_data=(x_test_resized, y_test))
+    # Save the model
+    model.save('se_cnn_mnist_28x28.h5')
+    print("Mô hình CNN cải tiến đã được lưu thành công.")
 
-    # Lưu mô hình sau khi huấn luyện
-    model.save('cnn_1_to_9.h5')  # Lưu mô hình vào file cnn_1_to_9.h5
-    print("Mô hình CNN đã được lưu.")
+    # Visualize training progress
+    import matplotlib.pyplot as plt
+    plt.figure(figsize=(12, 4))
+    plt.subplot(1, 2, 1)
+    plt.plot(history.history['accuracy'], label='Training Accuracy')
+    plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+    plt.title('Accuracy')
+    plt.legend()
 
-# Chạy hàm huấn luyện và lưu mô hình CNN
+    plt.subplot(1, 2, 2)
+    plt.plot(history.history['loss'], label='Training Loss')
+    plt.plot(history.history['val_loss'], label='Validation Loss')
+    plt.title('Loss')
+    plt.legend()
+
+    plt.show()
+
+# Run the training process
 if __name__ == "__main__":
     train_and_save_cnn_model()
-   
