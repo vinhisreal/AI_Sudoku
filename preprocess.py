@@ -284,12 +284,7 @@ def parse_grid(path):
 	# img_eq = cv2.equalizeHist(cropped_img)
 	cv2.imwrite('cropped_image.jpg', cropped_img)
 
-	squares = infer_grid(cropped)
-	
-	
-	digits = get_digits(cropped, squares, 28)
-	final_image = show_digits(digits)
-	return final_image
+	return cropped_img
 
 def output(a):
     sys.stdout.write(str(a))
