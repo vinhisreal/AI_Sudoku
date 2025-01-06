@@ -3,7 +3,7 @@ import cv2
 import operator
 import numpy as np
 from matplotlib import pyplot as plt
-from readmodel import extract_number
+# from readmodel import extract_number
 import sys
 import tensorflow as tf
 import os
