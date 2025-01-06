@@ -58,20 +58,12 @@ def find_corners_of_largest_polygon(img):
 	contours = sorted(contours, key=cv2.contourArea, reverse=True)  # Sort by area, descending
 	polygon = contours[0]  # Largest image
 
-	# Use of `operator.itemgetter` with `max` and `min` allows us to get the index of the point
-	# Each point is an array of 1 coordinate, hence the [0] getter, then [0] or [1] used to get x and y respectively.
-
-	# Bottom-right point has the largest (x + y) value
-	# Top-left has point smallest (x + y) value
-	# Bottom-left point has smallest (x - y) value
-	# Top-right point has largest (x - y) value
 	bottom_right, _ = max(enumerate([pt[0][0] + pt[0][1] for pt in polygon]), key=operator.itemgetter(1))
 	top_left, _ = min(enumerate([pt[0][0] + pt[0][1] for pt in polygon]), key=operator.itemgetter(1))
 	bottom_left, _ = min(enumerate([pt[0][0] - pt[0][1] for pt in polygon]), key=operator.itemgetter(1))
 	top_right, _ = max(enumerate([pt[0][0] - pt[0][1] for pt in polygon]), key=operator.itemgetter(1))
 
-	# Return an array of all 4 points using the indices
-	# Each point is in its own array of one coordinate
+
 	return [polygon[top_left][0], polygon[top_right][0], polygon[bottom_right][0], polygon[bottom_left][0]]
 
 
@@ -107,64 +99,6 @@ def crop_and_warp(img, crop_rect):
 
 	# Performs the transformation on the original image
 	return cv2.warpPerspective(img, m, (int(side), int(side)))
-
-
-def find_largest_feature(inp_img, scan_tl=None, scan_br=None):
-	"""
-	Uses the fact the `floodFill` function returns a bounding box of the area it filled to find the biggest
-	connected pixel structure in the image. Fills this structure in white, reducing the rest to black.
-	"""
-	img = inp_img.copy()  # Copy the image, leaving the original untouched
-	height, width = img.shape[:2]
-
-	max_area = 0
-	seed_point = (None, None)
-
-	if scan_tl is None:
-		scan_tl = [0, 0]
-
-	if scan_br is None:
-		scan_br = [width, height]
-
-	# Loop through the image
-	for x in range(scan_tl[0], scan_br[0]):
-		for y in range(scan_tl[1], scan_br[1]):
-			# Only operate on light or white squares
-			if img.item(y, x) == 255 and x < width and y < height:  # Note that .item() appears to take input as y, x
-				area = cv2.floodFill(img, None, (x, y), 64)
-				if area[0] > max_area:  # Gets the maximum bound area which should be the grid
-					max_area = area[0]
-					seed_point = (x, y)
-
-	# Colour everything grey (compensates for features outside of our middle scanning range
-	for x in range(width):
-		for y in range(height):
-			if img.item(y, x) == 255 and x < width and y < height:
-				cv2.floodFill(img, None, (x, y), 64)
-
-	mask = np.zeros((height + 2, width + 2), np.uint8)  # Mask that is 2 pixels bigger than the image
-
-	# Highlight the main feature
-	if all([p is not None for p in seed_point]):
-		cv2.floodFill(img, mask, seed_point, 255)
-
-	top, bottom, left, right = height, 0, width, 0
-
-	for x in range(width):
-		for y in range(height):
-			if img.item(y, x) == 64:  # Hide anything that isn't the main feature
-				cv2.floodFill(img, mask, (x, y), 0)
-
-			# Find the bounding parameters
-			if img.item(y, x) == 255:
-				top = y if y < top else top
-				bottom = y if y > bottom else bottom
-				left = x if x < left else left
-				right = x if x > right else right
-
-	bbox = [[left, top], [right, bottom]]
-	return img, np.array(bbox, dtype='float32'), seed_point
-
 
 def parse_grid(path):
 	original = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
