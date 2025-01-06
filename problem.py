@@ -340,4 +340,4 @@ def main(file):
         print("No solution exists for the given Sudoku.")
 
 if __name__ == "__main__":
-    main("3.jpg")
+    main("1.jpg")
