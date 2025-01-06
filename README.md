@@ -12,9 +12,15 @@ Before running the project, ensure that you have the following dependencies inst
 - NumPy
 - Matplotlib
 
+### Run
+
+Run with file main.py
+
+
 ### Python Libraries
 
 To install the necessary Python libraries, you can use the following command:
 
 ```bash
 pip install tensorflow opencv-python numpy matplotlib
+
