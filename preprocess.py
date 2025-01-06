@@ -6,7 +6,6 @@ from matplotlib import pyplot as plt
 # from readmodel import extract_number
 import sys
 import tensorflow as tf
-import os
 
 model = tf.keras.models.load_model('se_cnn_mnist_28x28.h5')
 
@@ -110,46 +109,6 @@ def crop_and_warp(img, crop_rect):
 	return cv2.warpPerspective(img, m, (int(side), int(side)))
 
 
-def cut_from_rect(img, rect):
-	"""Cuts a rectangle from an image using the top left and bottom right points."""
-	return img[int(rect[0][1]):int(rect[1][1]), int(rect[0][0]):int(rect[1][0])]
-
-
-def scale_and_centre(img, size, margin=0, background=0):
-	"""Scales and centres an image onto a new background square."""
-	h, w = img.shape[:2]
-
-	def centre_pad(length):
-		"""Handles centering for a given length that may be odd or even."""
-		if length % 2 == 0:
-			side1 = int((size - length) / 2)
-			side2 = side1
-		else:
-			side1 = int((size - length) / 2)
-			side2 = side1 + 1
-		return side1, side2
-
-	def scale(r, x):
-		return int(r * x)
-
-	if h > w:
-		t_pad = int(margin / 2)
-		b_pad = t_pad
-		ratio = (size - margin) / h
-		w, h = scale(ratio, w), scale(ratio, h)
-		l_pad, r_pad = centre_pad(w)
-	else:
-		l_pad = int(margin / 2)
-		r_pad = l_pad
-		ratio = (size - margin) / w
-		w, h = scale(ratio, w), scale(ratio, h)
-		t_pad, b_pad = centre_pad(h)
-
-	img = cv2.resize(img, (w, h))
-	img = cv2.copyMakeBorder(img, t_pad, b_pad, l_pad, r_pad, cv2.BORDER_CONSTANT, None, background)
-	return cv2.resize(img, (size, size))
-
-
 def find_largest_feature(inp_img, scan_tl=None, scan_br=None):
 	"""
 	Uses the fact the `floodFill` function returns a bounding box of the area it filled to find the biggest
@@ -205,44 +164,6 @@ def find_largest_feature(inp_img, scan_tl=None, scan_br=None):
 
 	bbox = [[left, top], [right, bottom]]
 	return img, np.array(bbox, dtype='float32'), seed_point
-
-
-def extract_digit(img, rect, size):
-    """Extracts a digit (if one exists) from a Sudoku square."""
-    digit = cut_from_rect(img, rect)  # Get the digit box from the whole square
-
-    # Use fill feature finding to get the largest feature in middle of the box
-    h, w = digit.shape[:2]
-    margin = int(np.mean([h, w]) / 2.5)
-    _, bbox, seed = find_largest_feature(digit, [margin, margin], [w - margin, h - margin])
-    digit = cut_from_rect(digit, bbox)
-
-    # Check for empty cells or invalid bounding boxes
-    non_zero_pixels = cv2.countNonZero(digit)
-    if non_zero_pixels < 50:  # Threshold for empty cells
-        return np.zeros((size, size), np.uint8)
-
-    # Validate bounding box dimensions
-    bbox_width = bbox[1][0] - bbox[0][0]
-    bbox_height = bbox[1][1] - bbox[0][1]
-    if bbox_height < bbox_width:  # If height is greater than width
-        return np.zeros((size, size), np.uint8)  # Return a black square
-
-    # Scale and pad the digit if it's valid
-    if bbox_width > 0 and bbox_height > 0 and (bbox_width * bbox_height) > 100:
-        return scale_and_centre(digit, size, 4)
-    else:
-        return np.zeros((size, size), np.uint8)
-
-def get_digits(img, squares, size):
-	"""Extracts digits from their cells and builds an array"""
-	digits = []
-	img = pre_process_image(img.copy(), skip_dilate=True)
-	print("get digits")
-	show_image(img)
-	for square in squares:
-		digits.append(extract_digit(img, square, size))
-	return digits
 
 
 def parse_grid(path):
