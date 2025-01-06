@@ -20,16 +20,6 @@ def show_image(img):
     cv2.destroyAllWindows()  # Close all windows
     return img
 
-def show_digits(digits, colour=255):
-    """Shows list of 81 extracted digits in a grid format"""
-    rows = []
-    with_border = [cv2.copyMakeBorder(img.copy(), 1, 1, 1, 1, cv2.BORDER_CONSTANT, None, colour) for img in digits]
-    for i in range(9):
-        row = np.concatenate(with_border[i * 9:((i + 1) * 9)], axis=1)
-        rows.append(row)
-    img = show_image(np.concatenate(rows))
-    return img
-
 def convert_when_colour(colour, img):
 	"""Dynamically converts an image to colour if the input colour is a tuple and the image is grayscale."""
 	if len(colour) == 3:
@@ -118,21 +108,6 @@ def crop_and_warp(img, crop_rect):
 
 	# Performs the transformation on the original image
 	return cv2.warpPerspective(img, m, (int(side), int(side)))
-
-
-def infer_grid(img):
-	"""Infers 81 cell grid from a square image."""
-	squares = []
-	side = img.shape[:1]
-	side = side[0] / 9
-
-	# Note that we swap j and i here so the rectangles are stored in the list reading left-right instead of top-down.
-	for j in range(9):
-		for i in range(9):
-			p1 = (i * side, j * side)  # Top left corner of a bounding box
-			p2 = ((i + 1) * side, (j + 1) * side)  # Bottom right corner of bounding box
-			squares.append((p1, p2))
-	return squares
 
 
 def cut_from_rect(img, rect):
